@@ -14,6 +14,12 @@ const drawer = ref(true);
 const rail = ref(false);
 onMounted(async () => {
   user.value = JSON.parse(localStorage.getItem("user"));
+  if (location.pathname == "/" && user.value != null) {
+    localStorage.removeItem("user");
+    user.value = null;
+  } else if (location.pathname != "/" && user.value == null) {
+    router.push({ name: "login" });
+  }
 });
 const logout = () => {
   localStorage.removeItem("user");
@@ -23,6 +29,9 @@ const logout = () => {
 }
 const closeSnackBar = () => {
   snackBar.value = { value: false, color: "", text: "" }
+}
+const onLogin = () => {
+  user.value = JSON.parse(localStorage.getItem("user"));
 }
 </script>
 
@@ -36,7 +45,7 @@ const closeSnackBar = () => {
   }">
     <v-main>
       <template v-if="!user">
-        <router-view />
+        <router-view :onLogin="onLogin" />
       </template>
       <template v-else>
         <!-- <v-card> -->
@@ -51,7 +60,8 @@ const closeSnackBar = () => {
                   </v-avatar>
                 </template>
                 <template v-slot:append>
-                  <v-btn variant="text" icon="mdi-chevron-left" @click.stop="rail = !rail"></v-btn>
+                  <v-btn variant="text" :icon="rail ? 'mdi-chevron-right' : 'mdi-chevron-left'"
+                    @click.stop="rail = !rail"></v-btn>
                 </template>
               </v-list-item>
             </template>
@@ -60,7 +70,7 @@ const closeSnackBar = () => {
             <v-list density="compact" nav>
               <v-list-item prepend-icon="mdi-view-dashboard" title="Dashboard" value="dashboard"
                 :to="'/Dashboard'"></v-list-item>
-              <v-list-item prepend-icon="mdi-account-multiple" title="Employees" value="employees"
+              <v-list-item v-if="user.roleId == 1" prepend-icon="mdi-account-multiple" title="Employees" value="employees"
                 :to="'/Employees'"></v-list-item>
               <v-list-item prepend-icon="mdi-truck-delivery" title="Couriers" value="couriers"
                 :to="'/Couriers'"></v-list-item>

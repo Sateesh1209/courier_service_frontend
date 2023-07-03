@@ -6,6 +6,9 @@ import { useGlobalStore } from '../stores/globalStore';
 import { storeToRefs } from 'pinia';
 import { useRouter } from 'vue-router';
 
+const props = defineProps({
+    onLogin: Function,
+});
 const globalStore = useGlobalStore();
 const { snackBar } = storeToRefs(globalStore);
 const router = useRouter();
@@ -18,14 +21,15 @@ const emailInValid = ref(false);
 async function loginClick() {
     await UserServices.loginUser(login)
         .then((data) => {
-            window.localStorage.setItem("user", JSON.stringify(data.data));
+            window.localStorage.setItem("user", JSON.stringify(data.data.data));
             snackBar.value = {
                 value: true,
                 color: "green",
                 text: "Login successful!",
             }
-            window.location.href = "/Dashboard"
-            // router.push({ name: "dashboard" });
+            // window.location.href = "/Dashboard"
+            router.push({ name: "dashboard" });
+            props.onLogin();
         })
         .catch((error) => {
             console.log(error);
