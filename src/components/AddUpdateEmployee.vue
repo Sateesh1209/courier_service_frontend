@@ -1,6 +1,5 @@
 <script setup>
 import { ref } from 'vue';
-import VuePhoneNumberInput from 'vue-phone-number-input';
 
 const roles = ref(['CLERK', 'DELIVERY AGENT']);
 const enablePassword = ref(false);
