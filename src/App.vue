@@ -70,6 +70,8 @@ const onLogin = () => {
             <v-list density="compact" nav>
               <v-list-item prepend-icon="mdi-view-dashboard" title="Dashboard" value="dashboard"
                 :to="'/Dashboard'"></v-list-item>
+              <v-list-item v-if="user.roleId == 1" prepend-icon="mdi-domain" title="Company" value="company"
+                :to="'/Company'"></v-list-item>
               <v-list-item v-if="user.roleId == 1" prepend-icon="mdi-account-multiple" title="Employees" value="employees"
                 :to="'/Employees'"></v-list-item>
               <v-list-item v-if="user.roleId == 1 || user.roleId == 2" prepend-icon="mdi-truck-delivery" title="Couriers"
