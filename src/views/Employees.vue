@@ -186,9 +186,7 @@ const onPhoneChange = () => {
     if (match) {
         var intlCode = (match[1] ? '+1 ' : '');
         employee.value.phone = [intlCode, '(', match[2], ') ', match[3], '-', match[4]].join('');
-        // return [intlCode, '(', match[2], ') ', match[3], '-', match[4]].join('');
     }
-    // return null;
 }
 </script>
 <template>
