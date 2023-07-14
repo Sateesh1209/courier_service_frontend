@@ -6,6 +6,7 @@ import { useRouter } from 'vue-router';
 import UpdateCompanyVue from '../components/UpdateCompany.vue';
 import CompanyServices from "../services/CompanyServices.js";
 import FairCalculatorService from '../services/FairCalculatorService';
+import CommonServices from '../services/CommonServices';
 
 const globalStore = useGlobalStore();
 const { snackBar } = storeToRefs(globalStore);
@@ -42,31 +43,17 @@ const closeCompanyPopup = () => {
     showCompanyPopup.value = false;
 }
 
-const getObjectByName = (name, objFor) => {
-    if (objFor == "street") {
-        FairCalculatorService.TOTAL_STREETS.map(item => {
-            if (item.streetName == name) {
-                companyDetails.value.street = item;
-                constantData.value.street = item;
-            }
-        })
-    } else {
-        FairCalculatorService.TOTAL_AVENUES.map(item => {
-            if (item.avenueName == name) {
-                companyDetails.value.avenue = item;
-                constantData.value.avenue = item;
-            }
-        });
-    }
-}
-
 async function getCompanyDetails() {
     await CompanyServices.getCompanyDetails()
         .then((response) => {
             companyDetails.value = response.data.data[0];
             constantData.value = response.data.data[0];
-            getObjectByName(response.data.data[0].avenue, "avenue");
-            getObjectByName(response.data.data[0].street, "street");
+            let streetItem = CommonServices.getObjectByName(response.data.data[0].street, "street");
+            companyDetails.value.street = streetItem;
+            constantData.value.street = streetItem;
+            let avenueItem = CommonServices.getObjectByName(response.data.data[0].avenue, "avenue");
+            companyDetails.value.avenue = avenueItem;
+            constantData.value.avenue = avenueItem;
         })
         .catch((error) => {
             console.log(error);

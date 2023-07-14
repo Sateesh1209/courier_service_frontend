@@ -6,6 +6,7 @@ import { storeToRefs } from 'pinia';
 import FairCalculatorService from '../services/FairCalculatorService';
 import CustomerServices from '../services/CustomerServices';
 import { useGlobalStore } from '../stores/globalStore';
+import CommonServices from '../services/CommonServices';
 
 const globalStore = useGlobalStore();
 const { snackBar } = storeToRefs(globalStore);
@@ -104,22 +105,6 @@ async function updateCustomer() {
     }
 }
 
-const getObjectByName = (name, objFor) => {
-    if (objFor == "street") {
-        FairCalculatorService.TOTAL_STREETS.map(item => {
-            if (item.streetName == name) {
-                customer.value.street = item;
-            }
-        })
-    } else {
-        FairCalculatorService.TOTAL_AVENUES.map(item => {
-            if (item.avenueName == name) {
-                customer.value.avenue = item;
-            }
-        });
-    }
-}
-
 async function getCustomerById(id) {
     await CustomerServices.getCustomerByCustomerId(id)
         .then((response) => {
@@ -130,8 +115,8 @@ async function getCustomerById(id) {
                 email: response.data.data.email,
                 block: response.data.data.block,
             }
-            getObjectByName(response.data.data.avenue, "avenue");
-            getObjectByName(response.data.data.street, "street");
+            customer.value.street = CommonServices.getObjectByName(response.data.data.street, "street");
+            customer.value.avenue = CommonServices.getObjectByName(response.data.data.avenue, "avenue");
         })
         .catch((error) => {
             console.log(error);
