@@ -7,6 +7,9 @@ export default {
   getCustomerByCustomerId(customerId) {
     return apiClient.get(`customer/${customerId}`);
   },
+  getCustomerByCustomerEmail(email) {
+    return apiClient.get(`findCustomerByEmail/${email}`);
+  },
   addCustomer(payload) {
     return apiClient.post(`customer`, payload);
   },

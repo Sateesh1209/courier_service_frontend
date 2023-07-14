@@ -1,3 +1,5 @@
+import pQueue from "./PriorityQueue";
+
 class FairCalculator {
   ROUTE_MAP = {
     a1sA: {
@@ -551,6 +553,52 @@ class FairCalculator {
       streetKey: "sG",
     },
   ];
+  findShortRoute = (pickupPoint, dropPoint) => {
+    const routeMap = this.ROUTE_MAP;
+    const distances = {};
+    const previous = {};
+
+    for (const point in routeMap) {
+      distances[point] = point === pickupPoint ? 0 : Infinity;
+    }
+
+    pQueue.enqueue(pickupPoint, 0);
+
+    while (!pQueue.isEmpty()) {
+      const { element: currentPoint } = pQueue.dequeue();
+
+      if (currentPoint === dropPoint) {
+        break;
+      }
+
+      if (!routeMap[currentPoint]) {
+        continue;
+      }
+
+      for (const neighbor in routeMap[currentPoint]) {
+        const currDistance = routeMap[currentPoint][neighbor];
+        const totalDistance = distances[currentPoint] + currDistance;
+
+        if (totalDistance < distances[neighbor]) {
+          distances[neighbor] = totalDistance;
+          previous[neighbor] = currentPoint;
+          pQueue.enqueue(neighbor, totalDistance);
+        }
+      }
+    }
+
+    const shortestPath = [dropPoint];
+    let point = dropPoint;
+
+    while (previous[point]) {
+      shortestPath.unshift(previous[point]);
+      point = previous[point];
+    }
+
+    return shortestPath;
+  };
 }
+
+
 
 export default new FairCalculator();

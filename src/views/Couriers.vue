@@ -1,11 +1,24 @@
 <script setup>
-import { ref } from 'vue';
-import logo from "../images/express_logo.png";
+import { onMounted, ref } from 'vue';
+import { useGlobalStore } from '../stores/globalStore';
+import { storeToRefs } from 'pinia';
+import { useRouter } from 'vue-router';
 
-const login = ref({
-    emailId: "",
-    password: "",
+const globalStore = useGlobalStore();
+const { snackBar } = storeToRefs(globalStore);
+const router = useRouter();
+onMounted(async () => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (user != null && (user.roleId == 1 || user.roleId == 2)) {
+        // getALlCouriers();
+    } else if (user != null && user.roleId != 1 && user.roleId != 2) {
+        router.push({ name: "dashboard" });
+    }
 });
+const openCourierPopup = () => {
+    router.push({ name: "addCourier" });
+   
+}
 </script>
 <template>
     <v-container fill-height>
@@ -13,7 +26,7 @@ const login = ref({
             <v-col class="d-flex justify-space-between"><v-card-title class="pl-0 text-h4 font-weight-bold">
                     Couriers List
                 </v-card-title>
-                <v-btn class="mt-3" variant="flat" color="deep-purple">Add Courier</v-btn>
+                <v-btn class="mt-3" variant="flat" color="deep-purple" @click="() => openCourierPopup()">Add Courier</v-btn>
             </v-col>
         </v-row>
         <v-row>
