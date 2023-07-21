@@ -67,7 +67,7 @@ async function onConfDelete() {
         .then((response) => {
             if (response.data.status == "Success") {
                 getALlCustomers();
-                showDeletePopup.value = false;
+                closeDeletePopup();
                 snackBar.value = {
                     value: true,
                     color: "green",

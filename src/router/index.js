@@ -34,6 +34,11 @@ const router = createRouter({
       component: () => import("../components/AddUpdateCourier.vue"),
     },
     {
+      path: "/UpdateCourier/:courierId",
+      name: "updateCourier",
+      component: () => import("../components/AddUpdateCourier.vue"),
+    },
+    {
       path: "/Customers",
       name: "customers",
       component: () => import("../views/Customers.vue"),

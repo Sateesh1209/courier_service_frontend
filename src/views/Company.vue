@@ -46,12 +46,12 @@ const closeCompanyPopup = () => {
 async function getCompanyDetails() {
     await CompanyServices.getCompanyDetails()
         .then((response) => {
-            companyDetails.value = response.data.data[0];
-            constantData.value = response.data.data[0];
-            let streetItem = CommonServices.getObjectByName(response.data.data[0].street, "street");
+            companyDetails.value = response.data.data;
+            constantData.value = response.data.data;
+            let streetItem = CommonServices.getObjectByName(response.data.data.street, "street");
             companyDetails.value.street = streetItem;
             constantData.value.street = streetItem;
-            let avenueItem = CommonServices.getObjectByName(response.data.data[0].avenue, "avenue");
+            let avenueItem = CommonServices.getObjectByName(response.data.data.avenue, "avenue");
             companyDetails.value.avenue = avenueItem;
             constantData.value.avenue = avenueItem;
         })

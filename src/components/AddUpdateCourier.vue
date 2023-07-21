@@ -1,6 +1,6 @@
 <script setup>
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { onMounted, ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import VueSelect from 'vue-select';
 import 'vue-select/dist/vue-select.css';
 import RouteMapView from './RouteMapView.vue';
@@ -10,10 +10,13 @@ import FairCalculatorService from '../services/FairCalculatorService';
 import CustomerServices from '../services/CustomerServices';
 import CommonServices from '../services/CommonServices';
 import CommonCustomerDetails from './CommonCustomerDetails.vue';
+import CourierServices from '../services/CourierServices';
 
 const routeDirections = ref([]);
 const panel = ref([0]);
 const globalStore = useGlobalStore();
+const route = useRoute();
+const viewType = ref("add");
 const pickupSearch = ref();
 const dropSearch = ref();
 const { snackBar } = storeToRefs(globalStore);
@@ -23,8 +26,10 @@ const availableBlocks = ref({
     pickup: [],
     drop: [],
 });
+const companyInfo = ref({});
 const customerDetails = ref({
     pickup: {
+        id: null,
         firstName: "",
         lastName: "",
         phone: "",
@@ -35,6 +40,7 @@ const customerDetails = ref({
         samePoint: true,
     },
     drop: {
+        id: null,
         firstName: "",
         lastName: "",
         phone: "",
@@ -46,6 +52,7 @@ const customerDetails = ref({
     },
 });
 const courierDetails = ref({
+    id: null,
     pickupAvenue: null,
     dropAvenue: null,
     pickupStreet: null,
@@ -59,26 +66,101 @@ const courierDetails = ref({
     deliveryInstructions: null,
 });
 
+onMounted(async () => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (user != null && (user.roleId == 1 || user.roleId == 2)) {
+        if (route?.params?.courierId) {
+            viewType.value = "edit";
+            getCourierDetailsById(route?.params?.courierId);
+        } else {
+            viewType.value = "add";
+        }
+        companyInfo.value = user.companyInfo;
+    } else if (user != null && user.roleId != 1) {
+        router.push({ name: "dashboard" });
+    }
+});
+
+const formatDateTime = (dateTimeString) => {
+    const dateTime = new Date(dateTimeString);
+    const year = dateTime.getFullYear();
+    const month = String(dateTime.getMonth() + 1).padStart(2, "0");
+    const date = String(dateTime.getDate()).padStart(2, "0");
+    const hours = String(dateTime.getHours()).padStart(2, "0");
+    const minutes = String(dateTime.getMinutes()).padStart(2, "0");
+    return `${year}-${month}-${date}T${hours}:${minutes}`;
+}
+
+async function getCourierDetailsById(id) {
+    await CourierServices.getCourierByCourierId(id)
+        .then((response) => {
+            if (response.data?.status == "Success") {
+                let tempObj = {
+                    pickup: {
+                        ...response.data?.data?.senderDetails,
+                        samePoint: JSON.parse(response.data?.data?.pickupPoint?.split("/")[2]),
+                    },
+                    drop: {
+                        ...response.data?.data?.receiverDetails,
+                        samePoint: JSON.parse(response.data?.data?.dropoffPoint?.split("/")[2]),
+                    },
+                };
+                courierDetails.value.id = id;
+                courierDetails.value.deliveryInstructions = response.data?.data?.deliveryInstructions;
+                courierDetails.value.requestedDateTime = formatDateTime(response.data?.data?.requestedDateTime);
+                customerDetails.value = tempObj;
+                customerDetails.value.pickup = tempObj.pickup;
+                customerDetails.value.drop = tempObj.drop;
+                if (tempObj.pickup.samePoint) {
+                    assignAddresses(tempObj.pickup, 'pickup')
+                } else {
+                    assignAddressesByPoint(response.data?.data?.pickupPoint, 'pickup')
+                }
+                if (tempObj.drop.samePoint) {
+                    assignAddresses(tempObj.drop, 'drop')
+                } else {
+                    assignAddressesByPoint(response.data?.data?.dropoffPoint, 'drop')
+                }
+            }
+        })
+        .catch((error) => {
+            console.log(error);
+            snackBar.value = {
+                value: true,
+                color: "error",
+                text: error.response?.data?.message,
+            }
+        });
+}
+
 async function updateCourier() {
     let payload = {
-        empId: employee.value.empId,
-        firstName: employee.value.firstName,
-        lastName: employee.value.lastName,
-        email: employee.value.email,
-        password: employee.value.password,
-        phone: employee.value.phone,
-        roleId: employee.value.role == "CLERK" ? 2 : 3,
+        id: parseInt(courierDetails.value.id),
+        sender: customerDetails.value.pickup.id,
+        receiver: customerDetails.value.drop.id,
+        pickupPoint: courierDetails.value.pickupAvenue?.avenueKey + courierDetails.value.pickupStreet?.streetKey + "/" + courierDetails.value.pickupBlock + "/" + customerDetails.value.pickup.samePoint,
+        dropoffPoint: courierDetails.value.dropAvenue?.avenueKey + courierDetails.value.dropStreet?.streetKey + "/" + courierDetails.value.dropBlock + "/" + customerDetails.value.drop.samePoint,
+        estimateTime: courierDetails.value.estimatedTime,
+        estimateBlocks: courierDetails.value.estimatedBlocks,
+        quotedPrice: courierDetails.value.quotedPrice,
+        requestedDateTime: courierDetails.value.requestedDateTime,
+        deliveryInstructions: courierDetails.value.deliveryInstructions,
     };
     if (viewType.value == "edit") {
-        await CourierServices.updateCourier(employee.value.empId, payload)
+        await CourierServices.updateCourier(courierDetails.value.id, payload)
             .then((response) => {
-                if (response.data.status == "Success") {
-                    getALlCouriers();
-                    closeCourierPopup();
+                if (response.data?.status == "Success") {
                     snackBar.value = {
                         value: true,
                         color: "green",
-                        text: response.data.message,
+                        text: response.data?.message,
+                    }
+                    router.push({ name: "couriers" });
+                } else {
+                    snackBar.value = {
+                        value: true,
+                        color: "error",
+                        text: response.data?.message,
                     }
                 }
             })
@@ -87,20 +169,19 @@ async function updateCourier() {
                 snackBar.value = {
                     value: true,
                     color: "error",
-                    text: error.response.data.message,
+                    text: error.response.data?.message,
                 }
             });
     } else {
         await CourierServices.addCourier(payload)
             .then((response) => {
-                if (response.data.status == "Success") {
-                    getALlCouriers();
-                    closeCourierPopup();
+                if (response.data?.status == "Success") {
                     snackBar.value = {
                         value: true,
                         color: "green",
-                        text: response.data.message,
+                        text: response.data?.message,
                     }
+                    router.push({ name: "couriers" });
                 }
             })
             .catch((error) => {
@@ -108,7 +189,7 @@ async function updateCourier() {
                 snackBar.value = {
                     value: true,
                     color: "error",
-                    text: error.response.data.message,
+                    text: error.response.data?.message,
                 }
             });
     }
@@ -119,7 +200,7 @@ const onCancel = () => {
 }
 
 const onSaveUpdate = () => {
-    // updateCourier();
+    updateCourier();
 }
 
 const getAddressObject = (street, avenue, block) => {
@@ -132,6 +213,52 @@ const getAddressObject = (street, avenue, block) => {
     points.avenue = CommonServices.getObjectByName(avenue, "avenue");
     points.block = block;
     return points;
+}
+const getAddressObjectByPoint = (point) => {
+    let points = {
+        street: null,
+        avenue: null,
+        block: null,
+    }
+    points.street = CommonServices.getObjectById(point?.slice(2, 4), "street");
+    points.avenue = CommonServices.getObjectById(point?.slice(0, 2), "avenue");
+    points.block = point?.split("/")[1];
+    return points;
+}
+
+const assignAddressesByPoint = (point, type, points = {
+    street: null,
+    avenue: null,
+    block: null,
+}) => {
+    points = getAddressObjectByPoint(point);
+    if (type == 'pickup') {
+        courierDetails.value.pickupAvenue = points.avenue;
+        courierDetails.value.pickupStreet = points.street;
+        courierDetails.value.pickupBlock = points.block;
+    } else {
+        courierDetails.value.dropAvenue = points.avenue;
+        courierDetails.value.dropStreet = points.street;
+        courierDetails.value.dropBlock = points.block;
+    }
+    getDirections();
+}
+const assignAddresses = (customer, type, points = {
+    street: null,
+    avenue: null,
+    block: null,
+}) => {
+    points = getAddressObject(customer.street, customer.avenue, customer.block);
+    if (type == 'pickup') {
+        courierDetails.value.pickupAvenue = points.avenue;
+        courierDetails.value.pickupStreet = points.street;
+        courierDetails.value.pickupBlock = points.block;
+    } else {
+        courierDetails.value.dropAvenue = points.avenue;
+        courierDetails.value.dropStreet = points.street;
+        courierDetails.value.dropBlock = points.block;
+    }
+    getDirections();
 }
 async function getCustomerByEmail(email, type = 'pickup') {
     let customer = {
@@ -151,31 +278,25 @@ async function getCustomerByEmail(email, type = 'pickup') {
     }
     await CustomerServices.getCustomerByCustomerEmail(email)
         .then((response) => {
-            if (response.data.status == 'Success') {
+            if (response.data?.status == 'Success') {
                 customer = {
-                    phone: response.data.data.phone,
-                    firstName: response.data.data.firstName,
-                    lastName: response.data.data.lastName,
-                    email: response.data.data.email,
-                    block: response.data.data.block,
-                    street: response.data.data.street,
-                    avenue: response.data.data.avenue,
+                    id: response.data?.data.id,
+                    phone: response.data?.data.phone,
+                    firstName: response.data?.data.firstName,
+                    lastName: response.data?.data.lastName,
+                    email: response.data?.data.email,
+                    block: response.data?.data.block,
+                    street: response.data?.data.street,
+                    avenue: response.data?.data.avenue,
                     samePoint: true,
                 }
-                points = getAddressObject(response.data.data.street, response.data.data.avenue, response.data.data.block);
             }
             if (type == 'pickup') {
                 customerDetails.value.pickup = customer;
-                courierDetails.value.pickupAvenue = points.avenue;
-                courierDetails.value.pickupStreet = points.street;
-                courierDetails.value.pickupBlock = points.block;
             } else {
                 customerDetails.value.drop = customer;
-                courierDetails.value.dropAvenue = points.avenue;
-                courierDetails.value.dropStreet = points.street;
-                courierDetails.value.dropBlock = points.block;
             }
-            getDirections();
+            assignAddresses(customer, type, points);
         })
         .catch((error) => {
             console.log(error);
@@ -194,7 +315,7 @@ async function getCustomerByEmail(email, type = 'pickup') {
             snackBar.value = {
                 value: true,
                 color: "error",
-                text: error.response.data.message,
+                text: error.response.data?.message,
             }
         });
 }
@@ -229,24 +350,33 @@ const getDirections = () => {
                 color: "error",
                 text: "Pickup and Drop points must be different...",
             }
+            if (routeDirections.value.length != 0) {
+                clearRoutes();
+            }
         } else if (shortestRoute?.length <= 1) {
             snackBar.value = {
                 value: true,
                 color: "error",
                 text: "No route found for selected points. Please choose different pickup/drop points.",
             }
+            if (routeDirections.value.length != 0) {
+                clearRoutes();
+            }
         } else {
             routeDirections.value = shortestRoute;
             courierDetails.value.estimatedBlocks = shortestRoute.length - 1;
-            courierDetails.value.estimatedTime = (shortestRoute.length - 1) * 3;
-            courierDetails.value.quotedPrice = (shortestRoute.length - 1) * 1.5;
+            courierDetails.value.estimatedTime = (shortestRoute.length - 1) * companyInfo.value?.timePerBlock;
+            courierDetails.value.quotedPrice = (shortestRoute.length - 1) * companyInfo.value?.pricePerBlock;
         }
     } else if (routeDirections.value.length != 0) {
-        routeDirections.value = [];
-        courierDetails.value.estimatedBlocks = 0;
-        courierDetails.value.estimatedTime = 0;
-        courierDetails.value.quotedPrice = 0;
+        clearRoutes();
     }
+}
+const clearRoutes = () => {
+    routeDirections.value = [];
+    courierDetails.value.estimatedBlocks = 0;
+    courierDetails.value.estimatedTime = 0;
+    courierDetails.value.quotedPrice = 0;
 }
 const onLocationChange = (changeType) => {
     if (changeType == 'pickAvenue' || changeType == 'pickStreet') {
@@ -265,18 +395,35 @@ const validateDateTime = (value) => {
         return true;
     }
     const selectedDate = new Date(value);
-    const now = new Date();
+    const startTimeParts = companyInfo.value?.startHour?.split(":");
+    const startHours = parseInt(startTimeParts[0], 10);
+    const startMinutes = parseInt(startTimeParts[1], 10);
+    const endTimeParts = companyInfo.value?.endHour.split(":");
+    const endHours = parseInt(endTimeParts[0], 10);
+    const endMinutes = parseInt(endTimeParts[1], 10);
 
-    const isFutureDate = selectedDate > now;
-    const isWithinTimeRange = selectedDate.getHours() >= 7 && selectedDate.getHours() < 16;
-
-    if (isFutureDate && isWithinTimeRange) {
+    const currentDate = new Date();
+    const selectedHours = selectedDate.getHours();
+    const selectedMinutes = selectedDate.getMinutes();
+    if (selectedDate > currentDate &&
+        ((selectedHours > startHours || (selectedHours === startHours && selectedMinutes >= startMinutes)) &&
+            (selectedHours < endHours || (selectedHours === endHours && selectedMinutes <= endMinutes)))) {
         return true;
     } else {
-        return 'Please select valid future date and time between 7AM to 4PM';
+        return `Please select valid future date and time between ${getTime(companyInfo.value?.startHour)} to ${getTime(companyInfo.value?.endHour)}`;
     }
 }
 
+const getTime = (time) => {
+    const timeString = time;
+    const timeParts = timeString.split(':');
+    const hours = parseInt(timeParts[0], 10);
+    const minutes = parseInt(timeParts[1], 10);
+
+    const formattedTime = new Date(0, 0, 0, hours, minutes).toLocaleString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+
+    return formattedTime;
+}
 const onCheckCustomer = (pointType) => {
     if (pointType == 'pickup') {
         getCustomerByEmail(pickupSearch.value, pointType);
@@ -314,6 +461,7 @@ const handlePointSwitch = (customerType) => {
         }
     }
 }
+
 </script>
 <template>
     <v-container fill-height>
@@ -573,9 +721,13 @@ const handlePointSwitch = (customerType) => {
                             <v-col class="d-flex justify-end">
                                 <div>
                                     <v-btn class="mr-3" variant="flat" color="secondary" @click="onCancel">Cancel</v-btn>
-                                    <v-btn v-if="viewType == 'add'" variant="flat" color="primary" @click="onSaveUpdate">Add
+                                    <v-btn v-if="viewType == 'add'"
+                                        :disabled="!(courierDetails.pickupBlock && courierDetails.dropBlock && routeDirections.length > 0 && courierDetails.requestedDateTime && validateDateTime(courierDetails.requestedDateTime) == true && courierDetails.deliveryInstructions)"
+                                        variant="flat" color="primary" @click="onSaveUpdate">Add
                                         Courier</v-btn>
-                                    <v-btn v-else variant="flat" color="primary" @click="onSaveUpdate">Update
+                                    <v-btn v-else
+                                        :disabled="!(courierDetails.pickupBlock && courierDetails.dropBlock && routeDirections.length > 0 && courierDetails.requestedDateTime && validateDateTime(courierDetails.requestedDateTime) == true && courierDetails.deliveryInstructions)"
+                                        variant="flat" color="primary" @click="onSaveUpdate">Update
                                         Courier</v-btn>
                                 </div>
                             </v-col>
