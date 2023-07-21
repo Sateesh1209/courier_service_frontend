@@ -74,10 +74,12 @@ const onLogin = () => {
                 :to="'/Company'"></v-list-item>
               <v-list-item v-if="user.roleId == 1" prepend-icon="mdi-account-multiple" title="Employees" value="employees"
                 :to="'/Employees'"></v-list-item>
-              <v-list-item v-if="user.roleId == 1 || user.roleId == 2" prepend-icon="mdi-truck-delivery" title="Couriers"
-                value="couriers" :to="'/Couriers'"></v-list-item>
+              <v-list-item v-if="user.roleId == 1 || user.roleId == 2 || user.roleId == 3"
+                prepend-icon="mdi-moped" title="Couriers" value="couriers" :to="'/Couriers'"></v-list-item>
               <v-list-item v-if="user.roleId == 1" prepend-icon="mdi-account-group" title="Customers" value="customers"
                 :to="'/Customers'"></v-list-item>
+              <v-list-item v-if="user.roleId == 3" prepend-icon="mdi-package-variant-closed-check" title="Deliveries" value="customers"
+                :to="'/Deliveries'"></v-list-item>
             </v-list>
 
             <template v-slot:append>

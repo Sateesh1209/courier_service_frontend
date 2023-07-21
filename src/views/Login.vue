@@ -21,6 +21,7 @@ const emailInValid = ref(false);
 async function loginClick() {
     await UserServices.loginUser(login)
         .then((data) => {
+            data.data.data.statuses = [{ statusId: 0, statusName: "All" }, ...data.data?.data?.statuses]
             window.localStorage.setItem("user", JSON.stringify(data.data.data));
             snackBar.value = {
                 value: true,

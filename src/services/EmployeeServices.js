@@ -7,6 +7,9 @@ export default {
   getEmployeeByEmployeeId(employeeId) {
     return apiClient.get(`employee/${employeeId}`);
   },
+  getDeliveryEmployeeByEmail(email) {
+    return apiClient.get(`employee/deliveryAgent/${email}`);
+  },
   addEmployee(payload) {
     return apiClient.post(`employee`, payload);
   },
