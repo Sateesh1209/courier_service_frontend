@@ -56,7 +56,7 @@ const onSaveUpdate = () => {
                                 v => v?.length == 17 && v?.charAt(0) == '+' && v?.charAt(1) == '1' || 'Phone must be valid'
                             ]" required></v-text-field>
                     </v-col>
-                    <v-col cols="12" sm="6">
+                    <v-col v-if="props.viewType == 'add'" cols="12" sm="6">
                         <v-select v-model:modelValue="props.employee.role" @update:modelValue="props.employee.role = $event"
                             :items="roles" density="comfortable" label="Role*" :rules="[
                                 v => !!v || 'Role is required',
