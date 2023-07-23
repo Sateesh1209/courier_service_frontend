@@ -12,6 +12,8 @@ const { snackBar } = storeToRefs(globalStore);
 const router = useRouter();
 const showEmployeePopup = ref(false);
 const showDeletePopup = ref(false);
+const showAccountExistPopup = ref(false);
+const accountExistMsg = ref("");
 const totalEmployees = ref([])
 const viewType = ref('add')
 const employee = ref({
@@ -28,7 +30,7 @@ onMounted(async () => {
     if (user != null && user.roleId == 1) {
         getALlEmployees();
     } else if (user != null && user.roleId != 1) {
-        router.push({ name: "dashboard" });
+        router.push({ name: "couriers" });
     }
 });
 const openEmployeePopup = (id = null, currViewType = "add") => {
@@ -87,7 +89,7 @@ async function getALlEmployees() {
             }
         });
 }
-async function updateEmployee() {
+async function updateEmployee(accountExists) {
     let payload = {
         empId: employee.value.empId,
         firstName: employee.value.firstName,
@@ -97,6 +99,9 @@ async function updateEmployee() {
         phone: employee.value.phone,
         roleId: employee.value.role == "CLERK" ? 2 : 3,
     };
+    if (accountExists) {
+        payload.reactivate = true;
+    }
     if (viewType.value == "edit") {
         await EmployeeServices.updateEmployee(employee.value.empId, payload)
             .then((response) => {
@@ -122,12 +127,18 @@ async function updateEmployee() {
         await EmployeeServices.addEmployee(payload)
             .then((response) => {
                 if (response.data.status == "Success") {
-                    getALlEmployees();
-                    closeEmployeePopup();
-                    snackBar.value = {
-                        value: true,
-                        color: "green",
-                        text: response.data.message,
+                    if (response.data?.data?.accoutExists == true) {
+                        accountExistMsg.value = response.data?.data?.message;
+                        showAccountExistPopup.value = true;
+                    } else {
+                        getALlEmployees();
+                        closeAccountExists();
+                        closeEmployeePopup();
+                        snackBar.value = {
+                            value: true,
+                            color: "green",
+                            text: response.data.message,
+                        }
                     }
                 }
             })
@@ -190,6 +201,9 @@ const onPhoneChange = () => {
         // return [intlCode, '(', match[2], ') ', match[3], '-', match[4]].join('');
     }
     // return null;
+}
+const closeAccountExists = () => {
+    showAccountExistPopup.value = false;
 }
 </script>
 <template>
@@ -262,4 +276,6 @@ const onPhoneChange = () => {
         :closeEmployeePopup="closeEmployeePopup" :updateEmployee="updateEmployee" :viewType="viewType" />
     <CommonDeleteDialog :showDeletePopup="showDeletePopup" :onConfDelete="onConfDelete" :closeDeletePopup="closeDeletePopup"
         :textValue="`Are you sure want to delete ${employee.firstName} ${employee.lastName} from employees list.`" />
+    <CommonDeleteDialog :showDeletePopup="showAccountExistPopup" :onConfDelete="() => updateEmployee(true)"
+        :closeDeletePopup="closeAccountExists" :textValue="accountExistMsg" />
 </template>

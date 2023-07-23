@@ -68,18 +68,18 @@ const onLogin = () => {
 
             <v-divider></v-divider>
             <v-list density="compact" nav>
-              <v-list-item prepend-icon="mdi-view-dashboard" title="Dashboard" value="dashboard"
-                :to="'/Dashboard'"></v-list-item>
+              <!-- <v-list-item prepend-icon="mdi-view-dashboard" title="Dashboard" value="dashboard"
+                :to="'/Dashboard'"></v-list-item> -->
+              <v-list-item v-if="user.roleId == 1 || user.roleId == 2 || user.roleId == 3" prepend-icon="mdi-moped"
+                title="Couriers" value="couriers" :to="'/Couriers'"></v-list-item>
               <v-list-item v-if="user.roleId == 1" prepend-icon="mdi-domain" title="Company" value="company"
                 :to="'/Company'"></v-list-item>
               <v-list-item v-if="user.roleId == 1" prepend-icon="mdi-account-multiple" title="Employees" value="employees"
                 :to="'/Employees'"></v-list-item>
-              <v-list-item v-if="user.roleId == 1 || user.roleId == 2 || user.roleId == 3"
-                prepend-icon="mdi-moped" title="Couriers" value="couriers" :to="'/Couriers'"></v-list-item>
               <v-list-item v-if="user.roleId == 1" prepend-icon="mdi-account-group" title="Customers" value="customers"
                 :to="'/Customers'"></v-list-item>
-              <v-list-item v-if="user.roleId == 3" prepend-icon="mdi-package-variant-closed-check" title="Deliveries" value="customers"
-                :to="'/Deliveries'"></v-list-item>
+              <v-list-item v-if="user.roleId == 3" prepend-icon="mdi-package-variant-closed-check" title="Deliveries"
+                value="deliveries" :to="'/Deliveries'"></v-list-item>
             </v-list>
 
             <template v-slot:append>

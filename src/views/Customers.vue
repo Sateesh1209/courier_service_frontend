@@ -29,7 +29,7 @@ onMounted(async () => {
     if (user != null && user.roleId == 1) {
         getALlCustomers();
     } else if (user != null && (user.roleId != 1)) {
-        router.push({ name: "dashboard" });
+        router.push({ name: "couriers" });
     }
 });
 const openCustomerPopup = (id = null, currViewType = "add") => {
@@ -40,6 +40,16 @@ const openCustomerPopup = (id = null, currViewType = "add") => {
     showCustomerPopup.value = true;
 }
 const closeCustomerPopup = () => {
+    customerDetails.value = {
+        id: "",
+        phone: "",
+        firstName: "",
+        lastName: "",
+        email: "",
+        avenue: "",
+        street: "",
+        block: "",
+    }
     showCustomerPopup.value = false;
 }
 
@@ -172,8 +182,9 @@ const onPhoneChange = () => {
                         </v-col>
                     </v-row></v-card></v-col></v-row>
     </v-container>
-    <AddUpdateCustomer :showCustomerPopup="showCustomerPopup" :custId="customerDetails.id" :onPhoneChange="onPhoneChange"
-        :closeCustomerPopup="closeCustomerPopup" :getALlCustomers="getALlCustomers" :viewType="viewType" />
+    <AddUpdateCustomer :key="customerDetails.id" :showCustomerPopup="showCustomerPopup" :custId="customerDetails.id"
+        :onPhoneChange="onPhoneChange" :closeCustomerPopup="closeCustomerPopup" :getALlCustomers="getALlCustomers"
+        :viewType="viewType" />
     <CommonDeleteDialog :showDeletePopup="showDeletePopup" :onConfDelete="onConfDelete" :closeDeletePopup="closeDeletePopup"
         :textValue="`Are you sure want to delete ${customerDetails.firstName} ${customerDetails.lastName} from customers list.`" />
 </template>

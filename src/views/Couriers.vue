@@ -159,9 +159,6 @@ const closeAssignPopup = () => {
 const onEdit = (id) => {
     router.push({ name: 'updateCourier', params: { courierId: id } })
 }
-const onStatusFilter = () => {
-    getALlCouriers();
-}
 </script>
 <template>
     <v-container fill-height>

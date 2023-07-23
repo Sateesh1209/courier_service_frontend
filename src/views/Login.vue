@@ -28,8 +28,7 @@ async function loginClick() {
                 color: "green",
                 text: "Login successful!",
             }
-            // window.location.href = "/Dashboard"
-            router.push({ name: "dashboard" });
+            router.push({ name: "couriers" });
             props.onLogin();
         })
         .catch((error) => {

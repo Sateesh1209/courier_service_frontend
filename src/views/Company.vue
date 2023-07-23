@@ -32,7 +32,7 @@ onMounted(async () => {
     if (user != null && user.roleId == 1) {
         getCompanyDetails();
     } else if (user != null && (user.roleId != 1)) {
-        router.push({ name: "dashboard" });
+        router.push({ name: "couriers" });
     }
 });
 const openCompanyPopup = () => {

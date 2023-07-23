@@ -1,8 +1,9 @@
 <script setup>
-import { ref, watchPostEffect } from 'vue';
+import { ref, watchEffect, watchPostEffect } from 'vue';
 import VueSelect from 'vue-select';
 import 'vue-select/dist/vue-select.css';
 import { storeToRefs } from 'pinia';
+import CommonDeleteDialog from './CommonDeleteDialog.vue';
 import FairCalculatorService from '../services/FairCalculatorService';
 import CustomerServices from '../services/CustomerServices';
 import { useGlobalStore } from '../stores/globalStore';
@@ -27,12 +28,15 @@ const customer = ref({
     avenue: null,
     block: null,
 });
+const custId = ref(props.custId);
 watchPostEffect(() => {
-    if (props.custId) {
-        getCustomerById(props.custId);
+    if (custId.value) {
+        getCustomerById(custId.value);
     }
-});
+})
 const availableBlocks = ref([]);
+const showAccountExistPopup = ref(false);
+const accountExistMsg = ref("");
 const onCancel = () => {
     customer.value = {
         firstName: "",
@@ -50,7 +54,7 @@ const onSaveUpdate = () => {
 }
 
 
-async function updateCustomer() {
+async function updateCustomer(accountExists) {
     let payload = {
         firstName: customer.value.firstName,
         lastName: customer.value.lastName,
@@ -60,6 +64,9 @@ async function updateCustomer() {
         avenue: customer.value.avenue.avenueName,
         block: customer.value.block,
     };
+    if (accountExists) {
+        payload.reactivate = true;
+    }
     if (props.viewType == "edit") {
         await CustomerServices.updateCustomer(props.custId, payload)
             .then((response) => {
@@ -85,12 +92,18 @@ async function updateCustomer() {
         await CustomerServices.addCustomer(payload)
             .then((response) => {
                 if (response.data.status == "Success") {
-                    props.getALlCustomers();
-                    onCancel();
-                    snackBar.value = {
-                        value: true,
-                        color: "green",
-                        text: response.data.message,
+                    if (response.data?.data?.accoutExists == true) {
+                        accountExistMsg.value = response.data?.data?.message;
+                        showAccountExistPopup.value = true;
+                    } else {
+                        props.getALlCustomers();
+                        closeAccountExists();
+                        onCancel();
+                        snackBar.value = {
+                            value: true,
+                            color: "green",
+                            text: response.data.message,
+                        }
                     }
                 }
             })
@@ -156,6 +169,9 @@ const onPhoneChange = () => {
         customer.value.phone = [intlCode, '(', match[2], ') ', match[3], '-', match[4]].join('');
     }
 }
+const closeAccountExists = () => {
+    showAccountExistPopup.value = false;
+}
 </script>
 <template>
     <v-dialog persistent v-model:modelValue="props.showCustomerPopup" @update:modelValue="props.showCustomerPopup = $event"
@@ -165,7 +181,17 @@ const onPhoneChange = () => {
                 {{ props.viewType == 'add' ? 'Add' : 'Update' }} Customer
             </v-card-title>
             <v-card-text class="body-1">
-                <v-row>
+                <i v-if="props.viewType != 'add'" v-bind:style="{ textAlign: 'center' }">
+                    <b>Note:</b>
+                    <span v-bind:style="{
+                        color: '#707070',
+                        'font-size': '14px',
+                    }"> Please note that if customer address is updated then all existing orders of the customer
+                        which has same pickup/drop location will be changed to false and previous address stays
+                        constant for existing orders.</span></i>
+                <v-row v-bind:style="{
+                    marginTop: '5px'
+                }">
                     <v-col cols="12" sm="6">
                         <v-text-field v-model="customer.firstName" label="First Name*" :rules="[
                             v => !!v || 'First Name is required',
@@ -233,4 +259,6 @@ const onPhoneChange = () => {
             </v-card-actions>
         </v-card>
     </v-dialog>
+    <CommonDeleteDialog :showDeletePopup="showAccountExistPopup" :onConfDelete="() => updateCustomer(true)"
+        :closeDeletePopup="closeAccountExists" :textValue="accountExistMsg" />
 </template>

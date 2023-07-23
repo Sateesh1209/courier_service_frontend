@@ -19,6 +19,12 @@ export default {
   assignCourier(orderId, payload) {
     return apiClient.put(`order/assign/${orderId}`, payload);
   },
+  pickupCourier(orderId, payload) {
+    return apiClient.put(`order/pickup/${orderId}`, payload);
+  },
+  updateDeliveryStatus(orderId, payload) {
+    return apiClient.put(`order/deliveryStatus/${orderId}`, payload);
+  },
   updateOrderStatus(orderId, payload) {
     return apiClient.put(`order/updateStatus/${orderId}`, payload);
   },

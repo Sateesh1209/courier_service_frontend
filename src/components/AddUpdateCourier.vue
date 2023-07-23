@@ -77,7 +77,7 @@ onMounted(async () => {
         }
         companyInfo.value = user.companyInfo;
     } else if (user != null && user.roleId != 1) {
-        router.push({ name: "dashboard" });
+        router.push({ name: "couriers" });
     }
 });
 
