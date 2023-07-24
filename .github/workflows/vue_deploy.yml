@@ -18,7 +18,7 @@ jobs:
         with:
           ref: dev
       - uses: actions/setup-node@v3
-        #May need to change to version 18
+        #May need to change to version 16
         with:
           node-version: 16
 
