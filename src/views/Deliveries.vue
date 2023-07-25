@@ -55,7 +55,7 @@ const formattedDate = (date) => {
     return moment(date).format('YYYY-MM-DD HH:mm')
 }
 const pickUpOrder = (courier) => {
-    selectedCourier.value = courier;
+    selectedCourier.value = { ...courier };
     showPickupPopup.value = true;
 }
 const closePickupPopup = () => {
@@ -80,6 +80,7 @@ async function updateDeliveryStatus(statusId, totalPrice) {
     };
     if (statusId == 4) {
         payload.totalPrice = Math.round(totalPrice * 100) / 100;
+        payload.deliveredTime = new Date();
     }
     await CourierServices.updateDeliveryStatus(payload.id, payload)
         .then((response) => {
@@ -144,7 +145,7 @@ async function onPickUpOrder() {
         });
 }
 const openRouteMap = (courier) => {
-    selectedCourier.value = courier;
+    selectedCourier.value = { ...courier };
     showDeliveryRoutePopup.value = true;
 }
 </script>
@@ -215,7 +216,7 @@ const openRouteMap = (courier) => {
                                                     <th class="text-left">Deliver By Date</th>
                                                     <th class="text-left">Delivered Time</th>
                                                     <th class="text-left">Quoted Price($)</th>
-                                                    <th class="text-left">Collected Price($)</th>
+                                                    <th class="text-left">Price Charged($)</th>
                                                     <th class="text-left">Status</th>
                                                     <th></th>
                                                 </tr>
@@ -287,7 +288,7 @@ const openRouteMap = (courier) => {
     <CommonDeleteDialog :showDeletePopup="showPickupPopup" :onConfDelete="onPickUpOrder"
         :closeDeletePopup="closePickupPopup"
         :textValue="`Are you sure want to pickup ${selectedCourier?.senderDetails?.firstName}'s order.`" />
-    <DeliveryAgentRoute :key="selectedCourier?.id" :delivery="selectedCourier"
+    <DeliveryAgentRoute v-if="showDeliveryRoutePopup" :key="selectedCourier?.id" :delivery="selectedCourier"
         :showDeliveryRoutePopup="showDeliveryRoutePopup" :closeDeliveryRoutePopup="closeDeliveryRoutePopup"
         :updateDeliveryStatus="updateDeliveryStatus" />
     <SuccessPopup :successPopup="successPopup" :closeSuccessPopup="closeSuccessPopup" />

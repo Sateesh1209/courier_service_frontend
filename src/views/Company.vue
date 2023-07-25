@@ -23,6 +23,7 @@ const companyDetails = ref({
     pricePerBlock: "",
     timePerBlock: "",
     onTimeBonus: "",
+    billingCycle: "",
     avenue: null,
     street: null,
     block: "",
@@ -39,15 +40,15 @@ const openCompanyPopup = () => {
     showCompanyPopup.value = true;
 }
 const closeCompanyPopup = () => {
-    companyDetails.value = constantData.value;
+    companyDetails.value = {...constantData.value};
     showCompanyPopup.value = false;
 }
 
 async function getCompanyDetails() {
     await CompanyServices.getCompanyDetails()
         .then((response) => {
-            companyDetails.value = response.data.data;
-            constantData.value = response.data.data;
+            companyDetails.value = {...response.data.data};
+            constantData.value = {...response.data.data};
             let streetItem = CommonServices.getObjectByName(response.data.data.street, "street");
             companyDetails.value.street = streetItem;
             constantData.value.street = streetItem;
@@ -75,6 +76,7 @@ async function updateCompany() {
         pricePerBlock: companyDetails.value.pricePerBlock,
         timePerBlock: companyDetails.value.timePerBlock,
         onTimeBonus: companyDetails.value.onTimeBonus,
+        billingCycle: companyDetails.value.billingCycle,
         avenue: companyDetails.value.avenue.avenueName,
         street: companyDetails.value.street.streetName,
         block: companyDetails.value.block,
@@ -179,6 +181,13 @@ const onLocationChange = () => {
                                         <v-col><b>On Time Delivery Bonus:</b> {{ companyDetails.onTimeBonus }}%</v-col>
                                     </v-row>
                                 </v-col>
+                                <v-col cols="6">
+                                    <v-row>
+                                        <v-col><b>Billing Cycle:</b> {{ companyDetails?.billingCycle }}</v-col>
+                                    </v-row>
+                                </v-col>
+                            </v-row>
+                            <v-row>
                                 <v-col cols="6">
                                     <v-row>
                                         <v-col><b>Address:</b> {{ companyDetails.block + ', ' +
