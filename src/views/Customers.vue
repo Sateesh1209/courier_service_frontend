@@ -6,12 +6,15 @@ import { useRouter } from 'vue-router';
 import AddUpdateCustomer from '../components/AddUpdateCustomer.vue';
 import CustomerServices from "../services/CustomerServices.js";
 import CommonDeleteDialog from '../components/CommonDeleteDialog.vue';
+import CustomerOrdersList from '../components/CustomerOrdersList.vue';
 
 const globalStore = useGlobalStore();
 const { snackBar } = storeToRefs(globalStore);
 const router = useRouter();
 const showCustomerPopup = ref(false);
 const showDeletePopup = ref(false);
+const showBillPopup = ref(false);
+const showOrdersListPopup = ref(false);
 const totalCustomers = ref([])
 const viewType = ref('add')
 const customerDetails = ref({
@@ -94,6 +97,30 @@ async function onConfDelete() {
             }
         });
 }
+async function onConfBill() {
+    await CustomerServices.generateBill()
+        .then((response) => {
+            if (response.data.status == "Success") {
+                closeBillPopup();
+                snackBar.value = {
+                    value: true,
+                    color: "green",
+                    text: response.data.message,
+                }
+            }
+        })
+        .catch((error) => {
+            console.log(error);
+            snackBar.value = {
+                value: true,
+                color: "error",
+                text: error.response.data.message,
+            }
+        });
+}
+const closeBillPopup = () => {
+    showBillPopup.value = false;
+}
 const closeDeletePopup = () => {
     showDeletePopup.value = false;
     customerDetails.value = {
@@ -115,6 +142,26 @@ const onPhoneChange = () => {
         customerDetails.value.phone = [intlCode, '(', match[2], ') ', match[3], '-', match[4]].join('');
     }
 }
+const lisAllOrders = (cust) => {
+    customerDetails.value = cust;
+    showOrdersListPopup.value = true;
+}
+const closeOrdersListPopup = () => {
+    showOrdersListPopup.value = false;
+    customerDetails.value = {
+        id: "",
+        phone: "",
+        firstName: "",
+        lastName: "",
+        email: "",
+        avenue: "",
+        street: "",
+        block: "",
+    }
+}
+const generateBill = () => {
+    showBillPopup.value = true;
+}
 </script>
 <template>
     <v-container fill-height>
@@ -122,8 +169,17 @@ const onPhoneChange = () => {
             <v-col class="d-flex justify-space-between"><v-card-title class="pl-0 text-h4 font-weight-bold">
                     Customers List
                 </v-card-title>
-                <v-btn class="mt-3" variant="flat" color="deep-purple" @click="() => openCustomerPopup()">Add
-                    Customer</v-btn>
+                <div>
+                    <v-tooltip location="top" text="Generate Bill For All">
+                        <template v-slot:activator="{ props }">
+                            <v-icon v-bind="props" class="mr-5 mt-2" color="#673AB7" size="40"
+                                icon="mdi-receipt-text-arrow-right" @click="() => generateBill()">
+                                <v-tooltip activator="parent" location="top">Tooltip</v-tooltip></v-icon>
+                        </template>
+                    </v-tooltip>
+                    <v-btn class="mt-3" variant="flat" color="deep-purple" @click="() => openCustomerPopup()">Add
+                        Customer</v-btn>
+                </div>
             </v-col>
         </v-row>
         <v-row>
@@ -175,6 +231,14 @@ const onPhoneChange = () => {
                                                 @click="() => openCustomerPopup(customer.id, 'edit')"></v-icon>
                                             <v-icon class="mt-2" size="large" icon="mdi-delete"
                                                 @click="() => deleteCustomer(customer)"></v-icon>
+                                            <v-tooltip location="top" text="List All Orders">
+                                                <template v-slot:activator="{ props }">
+                                                    <v-icon v-bind="props" class="ml-3 mt-2" color="#673AB7" size="large"
+                                                        icon="mdi-list-box" @click="() => lisAllOrders(customer)">
+                                                        <v-tooltip activator="parent"
+                                                            location="top">Tooltip</v-tooltip></v-icon>
+                                                </template>
+                                            </v-tooltip>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -187,4 +251,8 @@ const onPhoneChange = () => {
         :viewType="viewType" />
     <CommonDeleteDialog :showDeletePopup="showDeletePopup" :onConfDelete="onConfDelete" :closeDeletePopup="closeDeletePopup"
         :textValue="`Are you sure want to delete ${customerDetails.firstName} ${customerDetails.lastName} from customers list.`" />
+    <CommonDeleteDialog :showDeletePopup="showBillPopup" :onConfDelete="onConfBill" :closeDeletePopup="closeBillPopup"
+        :textValue="`Are you sure want to generate bill for all customers. If you confirm then in next billing cycle bill will be generated for orders which are created/delivered from now.`" />
+    <CustomerOrdersList :key="customerDetails.id" :showOrdersListPopup="showOrdersListPopup" :custId="customerDetails.id"
+        :closeOrdersListPopup="closeOrdersListPopup" />
 </template>

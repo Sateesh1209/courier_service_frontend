@@ -7,6 +7,12 @@ export default {
   getCustomerByCustomerId(customerId) {
     return apiClient.get(`customer/${customerId}`);
   },
+  getCustomerOrdersList(customerId) {
+    return apiClient.get(`customer/orders/${customerId}`);
+  },
+  generateBill(customerId) {
+    return apiClient.get(`customers/generateBill`);
+  },
   getCustomerByCustomerEmail(email) {
     return apiClient.get(`findCustomerByEmail/${email}`);
   },

@@ -34,7 +34,13 @@ watchPostEffect(() => {
     if (delivery.value) {
         const user = JSON.parse(localStorage.getItem("user"));
         userDetails.value = user;
-        deliveryStatuses.value = user?.statuses?.filter(item => item.statusId == 4 || item.statusId == 6 || item.statusId == 7)
+        deliveryStatuses.value = user?.statuses?.filter(item => {
+            if (delivery.value?.status.statusId == 6) {
+                return item.statusId == 4 || item.statusId == 7;
+            } else {
+                return item.statusId == 4 || item.statusId == 6 || item.statusId == 7;
+            }
+        })
         assignAddressesByPoint(delivery.value?.pickupPoint, "pickup");
         assignAddressesByPoint(delivery.value?.dropoffPoint, "drop");
     }
@@ -43,7 +49,7 @@ const onCancel = () => {
     props.closeDeliveryRoutePopup();
 }
 const onUpdateStatus = () => {
-    let quotedPrice = parseInt(delivery.value?.quotedPrice);
+    let quotedPrice = parseFloat(delivery.value?.quotedPrice);
     if (new Date(delivery.value?.requestedDateTime) > new Date()) {
         quotedPrice = quotedPrice + (quotedPrice * parseInt(userDetails.value?.companyInfo?.onTimeBonus) / 100);
     }

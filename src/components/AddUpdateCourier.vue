@@ -143,6 +143,7 @@ async function updateCourier() {
         estimateTime: courierDetails.value.estimatedTime,
         estimateBlocks: courierDetails.value.estimatedBlocks,
         quotedPrice: courierDetails.value.quotedPrice,
+        totalPrice: 0,
         requestedDateTime: courierDetails.value.requestedDateTime,
         deliveryInstructions: courierDetails.value.deliveryInstructions,
     };

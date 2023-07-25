@@ -22,6 +22,13 @@ const onSaveUpdate = () => {
 const openTimePicker = () => {
     this.$refs.timeField.$el.querySelector('input').focus();
 }
+const billingCycleHint = (billingCycle) => {
+    switch (billingCycle) {
+        case "Weekly": return "Bill will be generated at 9AM of every Sunday";
+        case "Monthly": return "Bill will be generated at 9AM of every Month Day 1";
+        case "Yearly": return "Bill will be generated at 9AM of every Year Month 1 Day 1";
+    }
+}
 </script>
 <template>
     <v-dialog persistent v-model:modelValue="props.showCompanyPopup" @update:modelValue="props.showCompanyPopup = $event"
@@ -68,6 +75,13 @@ const openTimePicker = () => {
                                 v => !!v || 'On Time Delivery Bonus is required',
                                 v => /^[0-9]+(\.[0-9]+)?$/.test(v) || 'Invalid number format',
                             ]" required></v-text-field>
+                    </v-col>
+                    <v-col cols="12" sm="6">
+                        <v-select v-model:modelValue="props.company.billingCycle"
+                            @update:modelValue="props.company.billingCycle = $event"
+                            :items="['Weekly', 'Monthly', 'Yearly']" density="comfortable" label="Billing Cycle*" :rules="[
+                                v => !!v || 'Billing Cycle is required',
+                            ]" persistent-hint :hint="billingCycleHint(props.company.billingCycle)"></v-select>
                     </v-col>
                     <v-col cols="12">
                         <h3>Address:</h3>
@@ -124,6 +138,7 @@ const openTimePicker = () => {
                                 !props.company?.cancelCharges?.match(/^[0-9]+(\.[0-9]+)?$/) ||
                                 !props.company?.onTimeBonus ||
                                 !props.company?.onTimeBonus?.match(/^[0-9]+(\.[0-9]+)?$/) ||
+                                !props.company.billingCycle ||
                                 !props.company?.avenue ||
                                 !props.company?.street ||
                                 !props.company?.block
