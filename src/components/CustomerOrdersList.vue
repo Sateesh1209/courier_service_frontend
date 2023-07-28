@@ -63,6 +63,7 @@ async function getCustomerOrdersList(id) {
                                 <tr v-bind:style="{
                                     backgroundColor: '#b28cf7',
                                 }">
+                                    <th class="text-left">Sender</th>
                                     <th class="text-left">Reciever</th>
                                     <th class="text-left">Pickup</th>
                                     <th class="text-left">Drop</th>
@@ -74,7 +75,7 @@ async function getCustomerOrdersList(id) {
                             </thead>
                             <tbody>
                                 <tr v-if="ordersList.length == 0">
-                                    <td colspan="7" v-bind:style="{
+                                    <td colspan="8" v-bind:style="{
                                         color: '#707070',
                                         'font-size': '14px',
                                         textAlign: 'center',
@@ -83,6 +84,9 @@ async function getCustomerOrdersList(id) {
                                     </td>
                                 </tr>
                                 <tr v-for="order in ordersList" :key="order.id">
+                                    <td>
+                                        {{ order?.senderDetails?.firstName + " " + order?.senderDetails?.lastName }}
+                                    </td>
                                     <td>
                                         {{ order?.receiverDetails?.firstName + " " + order?.receiverDetails?.lastName }}
                                     </td>
@@ -101,7 +105,7 @@ async function getCustomerOrdersList(id) {
                                     <td>{{ order?.totalPrice ? order?.totalPrice : "-" }}</td>
                                 </tr>
                                 <tr v-if="ordersList.length != 0">
-                                    <td colspan="5"></td>
+                                    <td colspan="6"></td>
                                     <td><b>Total Price:</b></td>
                                     <td><b>{{ custTotalAmount }}$</b></td>
                                 </tr>

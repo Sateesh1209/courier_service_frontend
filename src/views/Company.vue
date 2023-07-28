@@ -24,6 +24,7 @@ const companyDetails = ref({
     timePerBlock: "",
     onTimeBonus: "",
     billingCycle: "",
+    phone: "",
     avenue: null,
     street: null,
     block: "",
@@ -40,15 +41,15 @@ const openCompanyPopup = () => {
     showCompanyPopup.value = true;
 }
 const closeCompanyPopup = () => {
-    companyDetails.value = {...constantData.value};
+    companyDetails.value = { ...constantData.value };
     showCompanyPopup.value = false;
 }
 
 async function getCompanyDetails() {
     await CompanyServices.getCompanyDetails()
         .then((response) => {
-            companyDetails.value = {...response.data.data};
-            constantData.value = {...response.data.data};
+            companyDetails.value = { ...response.data.data };
+            constantData.value = { ...response.data.data };
             let streetItem = CommonServices.getObjectByName(response.data.data.street, "street");
             companyDetails.value.street = streetItem;
             constantData.value.street = streetItem;
@@ -77,6 +78,7 @@ async function updateCompany() {
         timePerBlock: companyDetails.value.timePerBlock,
         onTimeBonus: companyDetails.value.onTimeBonus,
         billingCycle: companyDetails.value.billingCycle,
+        phone: companyDetails.value.phone,
         avenue: companyDetails.value.avenue.avenueName,
         street: companyDetails.value.street.streetName,
         block: companyDetails.value.block,
@@ -120,6 +122,14 @@ const onLocationChange = () => {
     if (companyDetails.value.avenue?.avenueKey && companyDetails.value.street?.streetKey) {
         addressPoint = companyDetails.value.avenue?.avenueKey + companyDetails.value.street?.streetKey;
         getAvailableBlocks(addressPoint);
+    }
+}
+const onPhoneChange = () => {
+    var cleaned = ('' + companyDetails.value.phone).replace(/\D/g, '');
+    var match = cleaned.match(/^(1|)?(\d{3})(\d{3})(\d{4})$/);
+    if (match) {
+        var intlCode = (match[1] ? '+1 ' : '');
+        companyDetails.value.phone = [intlCode, '(', match[2], ') ', match[3], '-', match[4]].join('');
     }
 }
 </script>
@@ -195,11 +205,16 @@ const onLocationChange = () => {
                                         }}</v-col>
                                     </v-row>
                                 </v-col>
+                                <v-col cols="6">
+                                    <v-row>
+                                        <v-col><b>Phone:</b> {{ companyDetails.phone }}</v-col>
+                                    </v-row>
+                                </v-col>
                             </v-row>
                         </v-col>
                     </v-row></v-card></v-col></v-row>
     </v-container>
     <UpdateCompanyVue :showCompanyPopup="showCompanyPopup" :onLocationChange="onLocationChange"
         :availableBlocks="availableBlocks" :company="companyDetails" :updateCompany="updateCompany"
-        :closeCompanyPopup="closeCompanyPopup" :getCompanyDetails="getCompanyDetails" />
+        :closeCompanyPopup="closeCompanyPopup" :getCompanyDetails="getCompanyDetails" :onPhoneChange="onPhoneChange" />
 </template>
