@@ -10,6 +10,7 @@ const props = defineProps({
     availableBlocks: [],
     onLocationChange: Function,
     updateCompany: Function,
+    onPhoneChange: Function,
     closeCompanyPopup: Function,
 });
 
@@ -83,6 +84,14 @@ const billingCycleHint = (billingCycle) => {
                                 v => !!v || 'Billing Cycle is required',
                             ]" persistent-hint :hint="billingCycleHint(props.company.billingCycle)"></v-select>
                     </v-col>
+                    <v-col cols="12" sm="6">
+                        <v-text-field v-model:modelValue="props.company.phone"
+                            @update:modelValue="props.company.phone = $event" label="Phone* +1 (xxx) xxx-xxxx"
+                            @input="props.onPhoneChange" :rules="[
+                                v => !!v || 'Phone is required',
+                                v => v?.length == 17 && v?.charAt(0) == '+' && v?.charAt(1) == '1' || 'Phone must be valid'
+                            ]" required></v-text-field>
+                    </v-col>
                     <v-col cols="12">
                         <h3>Address:</h3>
                     </v-col>
@@ -139,6 +148,7 @@ const billingCycleHint = (billingCycle) => {
                                 !props.company?.onTimeBonus ||
                                 !props.company?.onTimeBonus?.match(/^[0-9]+(\.[0-9]+)?$/) ||
                                 !props.company.billingCycle ||
+                                !props.company?.phone ||
                                 !props.company?.avenue ||
                                 !props.company?.street ||
                                 !props.company?.block

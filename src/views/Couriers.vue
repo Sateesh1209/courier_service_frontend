@@ -165,10 +165,10 @@ const onEdit = (id) => {
         <v-row align="center">
             <v-col class="d-flex justify-space-between">
                 <v-card-title class="pl-0 text-h4 font-weight-bold">
-                    Couriers List
+                    Orders List
                 </v-card-title>
                 <v-btn v-if="userDetails?.roleId != 3" class="ml-2" variant="flat" color="deep-purple"
-                    @click="() => openCourierPopup()">Add Courier</v-btn>
+                    @click="() => openCourierPopup()">Add Order</v-btn>
             </v-col>
         </v-row>
         <v-row v-if="userDetails?.roleId == 1 || userDetails?.roleId == 2">
@@ -221,7 +221,7 @@ const onEdit = (id) => {
                                             'font-size': '14px',
                                             textAlign: 'center',
                                         }">
-                                            No Couriers found...
+                                            No Orders found...
                                         </td>
                                     </tr>
                                     <tr v-for="courier in totalCouriers" :key="courier.id">

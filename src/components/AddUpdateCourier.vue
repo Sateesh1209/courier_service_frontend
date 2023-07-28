@@ -13,6 +13,9 @@ import CommonCustomerDetails from './CommonCustomerDetails.vue';
 import CourierServices from '../services/CourierServices';
 
 const routeDirections = ref([]);
+const allCustomers = ref([]);
+const courierSender = ref(null);
+const courierReceiver = ref(null);
 const panel = ref([0]);
 const globalStore = useGlobalStore();
 const route = useRoute();
@@ -69,6 +72,7 @@ const courierDetails = ref({
 onMounted(async () => {
     const user = JSON.parse(localStorage.getItem("user"));
     if (user != null && (user.roleId == 1 || user.roleId == 2)) {
+        getALlCustomers();
         if (route?.params?.courierId) {
             viewType.value = "edit";
             getCourierDetailsById(route?.params?.courierId);
@@ -427,9 +431,13 @@ const getTime = (time) => {
 }
 const onCheckCustomer = (pointType) => {
     if (pointType == 'pickup') {
-        getCustomerByEmail(pickupSearch.value, pointType);
+        if (courierSender.value?.email) {
+            getCustomerByEmail(courierSender.value?.email, pointType);
+        }
     } else {
-        getCustomerByEmail(dropSearch.value, pointType);
+        if (courierReceiver.value?.email) {
+            getCustomerByEmail(courierReceiver.value?.email, pointType);
+        }
     }
 }
 
@@ -463,12 +471,29 @@ const handlePointSwitch = (customerType) => {
     }
 }
 
+async function getALlCustomers() {
+    await CustomerServices.getCustomers()
+        .then((response) => {
+            response.data.data?.map(item => {
+                item.fullName = CommonServices.capitalCase(item?.firstName + " " + item.lastName);
+            })
+            allCustomers.value = response.data.data;
+        })
+        .catch((error) => {
+            console.log(error);
+            snackBar.value = {
+                value: true,
+                color: "error",
+                text: error.response.data.message,
+            }
+        });
+}
 </script>
 <template>
     <v-container fill-height>
         <v-row align="center">
             <v-col class="d-flex justify-space-between"><v-card-title class="pl-0 text-h4 font-weight-bold">
-                    Add Courier
+                    {{ viewType == 'add' ? 'Add' : 'Update' }} Order
                 </v-card-title>
                 <v-btn class="mt-3" variant="outlined" color="primary" @click="$router.go(-1)">Back</v-btn>
             </v-col>
@@ -503,17 +528,22 @@ const handlePointSwitch = (customerType) => {
                                                 <v-col cols="12" sm="12">
                                                     <v-row justify="center">
                                                         <v-col cols="8" sm="6" align-self="center">
-                                                            <v-text-field v-model="pickupSearch" label="Search by email..."
+                                                            <VueSelect v-model="courierSender"
+                                                                @update:modelValue="() => onCheckCustomer('pickup')"
+                                                                :options="allCustomers" label="fullName" value="id"
+                                                                placeholder="Search Sender">
+                                                            </VueSelect>
+                                                            <!-- <v-text-field v-model="pickupSearch" label="Search by email..."
                                                                 type="search" :rules="[
                                                                     v => !v || v?.match(/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i) || 'Please enter valid email'
-                                                                ]"></v-text-field>
+                                                                ]"></v-text-field> -->
                                                         </v-col>
-                                                        <v-col cols="4" sm="2" align-self="center">
+                                                        <!-- <v-col cols="4" sm="2" align-self="center">
                                                             <v-btn variant="flat" color="primary"
                                                                 @click="() => onCheckCustomer('pickup')"
                                                                 :disabled="!pickupSearch ||
                                                                     !pickupSearch?.match(/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i)">Search</v-btn>
-                                                        </v-col>
+                                                        </v-col> -->
                                                     </v-row>
                                                 </v-col>
                                                 <v-col v-if="customerDetails.pickup.email" cols="12">
@@ -565,17 +595,22 @@ const handlePointSwitch = (customerType) => {
                                                 <v-col cols="12" sm="12">
                                                     <v-row justify="center">
                                                         <v-col cols="8" sm="6" align-self="center">
-                                                            <v-text-field v-model="dropSearch" label="Search by email..."
+                                                            <VueSelect v-model="courierReceiver"
+                                                                @update:modelValue="() => onCheckCustomer('drop')"
+                                                                :options="allCustomers" label="fullName" value="id"
+                                                                placeholder="Search Receiver">
+                                                            </VueSelect>
+                                                            <!-- <v-text-field v-model="dropSearch" label="Search by email..."
                                                                 :rules="[
                                                                     v => !v || v?.match(/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i) || 'Please enter valid email'
-                                                                ]"></v-text-field>
+                                                                ]"></v-text-field> -->
                                                         </v-col>
-                                                        <v-col cols="4" sm="2" align-self="center">
+                                                        <!-- <v-col cols="4" sm="2" align-self="center">
                                                             <v-btn variant="flat" color="primary"
                                                                 @click="() => onCheckCustomer('drop')"
                                                                 :disabled="!dropSearch ||
                                                                     !dropSearch?.match(/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i)">Search</v-btn>
-                                                        </v-col>
+                                                        </v-col> -->
                                                     </v-row>
                                                 </v-col>
                                                 <v-col v-if="customerDetails.drop.email" cols="12">
@@ -725,11 +760,11 @@ const handlePointSwitch = (customerType) => {
                                     <v-btn v-if="viewType == 'add'"
                                         :disabled="!(courierDetails.pickupBlock && courierDetails.dropBlock && routeDirections.length > 0 && courierDetails.requestedDateTime && validateDateTime(courierDetails.requestedDateTime) == true && courierDetails.deliveryInstructions)"
                                         variant="flat" color="primary" @click="onSaveUpdate">Add
-                                        Courier</v-btn>
+                                        Order</v-btn>
                                     <v-btn v-else
                                         :disabled="!(courierDetails.pickupBlock && courierDetails.dropBlock && routeDirections.length > 0 && courierDetails.requestedDateTime && validateDateTime(courierDetails.requestedDateTime) == true && courierDetails.deliveryInstructions)"
                                         variant="flat" color="primary" @click="onSaveUpdate">Update
-                                        Courier</v-btn>
+                                        Order</v-btn>
                                 </div>
                             </v-col>
                         </v-row>
