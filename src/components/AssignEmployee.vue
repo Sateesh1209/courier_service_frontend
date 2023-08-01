@@ -1,5 +1,7 @@
 <script setup>
 import { ref } from 'vue';
+import VueSelect from 'vue-select';
+import 'vue-select/dist/vue-select.css';
 import EmployeeServices from '../services/EmployeeServices';
 import CourierServices from '../services/CourierServices';
 import CommonEmployeeDetails from './CommonEmployeeDetails.vue';
@@ -9,6 +11,7 @@ import { storeToRefs } from 'pinia';
 const props = defineProps({
     showAssignPopup: false,
     courierId: "",
+    allDeliveryAgents: [],
     getALlCouriers: Function,
     closeAssignPopup: Function,
 });
@@ -86,15 +89,18 @@ async function onAssign() {
                         <v-col cols="12" sm="12">
                             <v-row justify="center">
                                 <v-col cols="8" sm="6" align-self="center">
-                                    <v-text-field v-model="employeeSearch" label="Search by email..." type="search" :rules="[
+                                    <VueSelect v-model="employeeDetails" :options="props.allDeliveryAgents" label="fullName"
+                                        value="id" placeholder="Search Delivery Agent...">
+                                    </VueSelect>
+                                    <!-- <v-text-field v-model="employeeSearch" label="Search by email..." type="search" :rules="[
                                         v => !v || v?.match(/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i) || 'Please enter valid email'
-                                    ]"></v-text-field>
+                                    ]"></v-text-field> -->
                                 </v-col>
-                                <v-col cols="4" sm="2" align-self="center">
+                                <!-- <v-col cols="4" sm="2" align-self="center">
                                     <v-btn variant="flat" color="primary" @click="() => getDeliveryEmployeeByEmail()"
                                         :disabled="!employeeSearch ||
                                             !employeeSearch?.match(/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i)">Search</v-btn>
-                                </v-col>
+                                </v-col> -->
                                 <v-col cols="12">
                                     <CommonEmployeeDetails :employeeDetails="employeeDetails" />
                                 </v-col>
