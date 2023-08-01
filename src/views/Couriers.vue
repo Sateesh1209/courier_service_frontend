@@ -10,6 +10,7 @@ import CommonDeleteDialog from '../components/CommonDeleteDialog.vue';
 import CommonServices from '../services/CommonServices';
 import AssignEmployee from '../components/AssignEmployee.vue';
 import CustomerServices from '../services/CustomerServices';
+import EmployeeServices from '../services/EmployeeServices';
 
 const globalStore = useGlobalStore();
 const { snackBar } = storeToRefs(globalStore);
@@ -18,6 +19,7 @@ const userDetails = ref(null);
 const cancelText = ref(null);
 const showDeletePopup = ref(false);
 const allCustomers = ref([]);
+const allDeliveryAgents = ref([]);
 const courierStatusFilter = ref(null);
 const courierCustomerFilter = ref(null);
 const showSelfAssignPopup = ref(false);
@@ -31,6 +33,7 @@ onMounted(async () => {
     if (user != null) {
         getALlCouriers();
         getALlCustomers();
+        getALlDeliveryAgents();
     }
 });
 const openCourierPopup = (id = null, currViewType = "add") => {
@@ -44,6 +47,23 @@ async function getALlCustomers() {
                 item.fullName = CommonServices.capitalCase(item?.firstName + " " + item.lastName);
             })
             allCustomers.value = response.data.data;
+        })
+        .catch((error) => {
+            console.log(error);
+            snackBar.value = {
+                value: true,
+                color: "error",
+                text: error.response.data.message,
+            }
+        });
+}
+async function getALlDeliveryAgents() {
+    await EmployeeServices.getAllDeliveryAgents()
+        .then((response) => {
+            response.data.data?.map(item => {
+                item.fullName = CommonServices.capitalCase(item?.firstName + " " + item.lastName);
+            })
+            allDeliveryAgents.value = response.data.data;
         })
         .catch((error) => {
             console.log(error);
@@ -294,8 +314,8 @@ const onEdit = (id) => {
                         </v-col>
                     </v-row></v-card></v-col></v-row>
     </v-container>
-    <AssignEmployee :closeAssignPopup="closeAssignPopup" :showAssignPopup="showAssignPopup" :courierId="selectedCourier?.id"
-        :getALlCouriers="getALlCouriers" />
+    <AssignEmployee :allDeliveryAgents="allDeliveryAgents" :closeAssignPopup="closeAssignPopup"
+        :showAssignPopup="showAssignPopup" :courierId="selectedCourier?.id" :getALlCouriers="getALlCouriers" />
     <CommonDeleteDialog :showDeletePopup="showDeletePopup" :onConfDelete="onConfCancel" :closeDeletePopup="closeDeletePopup"
         :textValue="cancelText" />
     <CommonDeleteDialog :showDeletePopup="showSelfAssignPopup" :onConfDelete="onSelfAssign"
